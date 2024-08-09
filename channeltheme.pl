@@ -3,7 +3,7 @@ use warnings;
 use Irssi qw(command_bind signal_add);
 use vars qw($VERSION %IRSSI);
 
-$VERSION = '0.1';
+$VERSION = '0.2';
 %IRSSI = (
     authors     => 'Wojciech Nycz',
     contact     => 'inner.bushman@gmail.com',
@@ -22,9 +22,9 @@ Irssi::settings_add_str('channel_theme', 'channel_theme_pairs', '');
 # Function to parse the settings
 sub parse_settings {
     my $pairs_str = Irssi::settings_get_str('channel_theme_pairs');
-    
+
     my @pairs = split /;/, $pairs_str;
-    
+
     my %channel_themes;
     foreach my $pair (@pairs) {
         my ($channel, $theme) = split /=/, $pair;
@@ -32,7 +32,6 @@ sub parse_settings {
             $channel_themes{'#' . $channel} = $theme;
         }
     }
-    
     return %channel_themes;
 }
 
@@ -64,6 +63,13 @@ sub cmd_add {
 
     # Ensure the channel name starts with #
     $channel =~ s/^#?/#/;
+
+    # Check if the theme file exists
+    my $theme_file_path = Irssi::get_irssi_dir() . "/$theme";
+    if (!-e $theme_file_path) {
+        Irssi::print("Error: Theme file '$theme' does not exist in " . Irssi::get_irssi_dir());
+        return;
+    }
 
     my %channel_themes = parse_settings();
     $channel_themes{$channel} = $theme;
@@ -102,7 +108,7 @@ sub cmd_remove {
 
 sub cmd_list {
     my $pairs_str = Irssi::settings_get_str('channel_theme_pairs');
-    
+
     my @pairs = split /;/, $pairs_str;
 
     Irssi::print("Channel-Theme Pairs:");
@@ -117,7 +123,7 @@ sub cmd_list {
 # Display help message
 sub cmd_help {
     my $help = $IRSSI{name} . " " . $VERSION . "
-    
+
 This script allows to automatically switch themes based on the channel you're currently viewing.
 
 Usage:
@@ -140,7 +146,6 @@ Example configuration:
 
 For persistent configuration, the channel-theme pairs are stored in the Irssi setting
 ";
-    
     Irssi::print($help, MSGLEVEL_CLIENTCRAP);
 }
 
